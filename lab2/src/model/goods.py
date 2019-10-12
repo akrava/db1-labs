@@ -40,6 +40,6 @@ class GoodsModel(BaseModel):
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         return Goods(row['height'], row['width'], row['depth'], row['weight'],
                      row['invoice_num'], row['description'], row['id'])

@@ -12,6 +12,7 @@ class Warehouse:
         return f"Warehouse [num={self.num}, address={self.address}, " \
                f"phone_number={self.phone_number}, city_id={self.city_id}]"
 
+    @property
     def __dict__(self):
         return {'num': self.num, 'address': self.address,
                 'phone_number': self.phone_number, 'city_id': self.city_id}
@@ -46,5 +47,5 @@ class WarehouseModel(BaseModel):
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         return Warehouse(row['address'], row['phone_number'], row['city_id'], row['num'])

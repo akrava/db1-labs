@@ -46,7 +46,7 @@ class InvoiceModel(BaseModel):
         self.__select_with_join_query = ""
 
     @staticmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         return Invoice(row['date_departure'], row['shipping_cost_num'], row['sender_ipn'], row['recipient_ipn'],
                        row['warehouse_dep_num'], row['warehouse_arr_num'], row['date_arrival'], row['num'])
 

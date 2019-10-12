@@ -10,6 +10,7 @@ class Contragent:
     def __str__(self):
         return f"Contragent [ipn={self.ipn}, name={self.name}, phone_number={self.phone_number}]"
 
+    @property
     def __dict__(self):
         return {'ipn': self.ipn, 'name': self.name, 'phone_number': self.phone_number}
 
@@ -49,5 +50,5 @@ class ContragentModel(BaseModel):
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         return Contragent(row['ipn'], row['name'], row['phone_number'])

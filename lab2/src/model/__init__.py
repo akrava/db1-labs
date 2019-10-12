@@ -50,7 +50,7 @@ class BaseModel(ABC):
         self._cursor.execute(self.__select_query, [pk])
         row = self._cursor.fetchone()
         if row is not None and self._is_valid_item_dict(row):
-            return self.__get_item_from_row(row)
+            return self._get_item_from_row(row)
         else:
             raise Exception("No rows received from DB")
 
@@ -58,7 +58,7 @@ class BaseModel(ABC):
         self._cursor.execute(self.__select_all_query, {'limit': limit, 'offset': offset})
         rows = self._cursor.fetchall()
         if isinstance(rows, list) and all(self._is_valid_item_dict(row) for row in rows):
-            return [self.__get_item_from_row(row) for row in rows]
+            return [self._get_item_from_row(row) for row in rows]
         else:
             raise Exception("No rows received from DB")
 
@@ -90,7 +90,7 @@ class BaseModel(ABC):
 
     @staticmethod
     @abstractmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         raise NotImplementedError()
 
     def __insert_pk_in_item(self, item: object, pk: int):

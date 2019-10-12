@@ -9,6 +9,7 @@ class City:
     def __str__(self):
         return f"City [id={self.id}, name={self.name}]"
 
+    @property
     def __dict__(self):
         return {'id': self.id, 'name': self.name}
 
@@ -37,5 +38,5 @@ class CityModel(BaseModel):
         return isinstance(item['name'], str) and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
-    def __get_item_from_row(row: dict):
+    def _get_item_from_row(row: dict):
         return City(row['name'], row['id'])
