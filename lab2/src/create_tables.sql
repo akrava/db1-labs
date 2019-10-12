@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS contragents
 CREATE TABLE IF NOT EXISTS cities
 (
     id   serial PRIMARY KEY,
-    name text NOT NULL
+    name varchar(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS warehouses
