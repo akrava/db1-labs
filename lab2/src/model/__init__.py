@@ -86,12 +86,12 @@ class BaseModel(ABC):
         if pk_required:
             return isinstance(item[self.__primary_key_name], int)
         else:
-            return True
+            return item[self.__primary_key_name] is None
 
     @staticmethod
     @abstractmethod
     def _get_item_from_row(row: dict):
-        raise NotImplementedError()
+        pass
 
     def __insert_pk_in_item(self, item: object, pk: int):
         setattr(item, self.__primary_key_name, pk)

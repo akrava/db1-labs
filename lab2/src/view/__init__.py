@@ -1,0 +1,100 @@
+from abc import ABC, abstractmethod
+from math import ceil
+
+
+class BaseView(ABC):
+    def __init__(self, name, view_driver):
+        self.__name = name
+        self.__view_driver = view_driver
+
+    def show_operations(self, list_operations: [str]):
+        return self.__view_driver.draw_menu(list_operations, self.__name)
+
+    def show_items_table(self, items: [object], count_all: int, offset: int = 0, limit: int = None):
+        table_head = self._table_head()
+        table_len = len(table_head)
+        heading = f'{self.__name.upper()} LIST'
+
+        if limit is not None and limit > 0:
+            list_page_status = f'Listed {len(items)} of {count_all}. Page {offset // limit + 1} of {ceil(count_all / limit):d}'
+        else:
+            list_page_status = 'Listed all items'
+
+        self.__view_driver.draw_list([self._item_as_row(item) for item in items], heading,
+                                     table_head, list_page_status)
+
+    # @staticmethod
+    # def show_item(item_type, item, item_info):
+    #     print('//////////////////////////////////////////////////////////////')
+    #     print('Good news, we have some {}!'.format(item.upper()))
+    #     print('{} INFO: {}'.format(item_type.upper(), item_info))
+    #     print('//////////////////////////////////////////////////////////////')
+    #
+    # @staticmethod
+    # def display_missing_item_error(item, err):
+    #     print('**************************************************************')
+    #     print('We are sorry, we have no {}!'.format(item.upper()))
+    #     print('{}'.format(err.args[0]))
+    #     print('**************************************************************')
+    #
+    # @staticmethod
+    # def display_item_already_stored_error(item, item_type, err):
+    #     print('**************************************************************')
+    #     print('Hey! We already have {} in our {} list!'
+    #           .format(item.upper(), item_type))
+    #     print('{}'.format(err.args[0]))
+    #     print('**************************************************************')
+    #
+    # @staticmethod
+    # def display_item_not_yet_stored_error(item, item_type, err):
+    #     print('**************************************************************')
+    #     print('We don\'t have any {} in our {} list. Please insert it first!'
+    #           .format(item.upper(), item_type))
+    #     print('{}'.format(err.args[0]))
+    #     print('**************************************************************')
+    #
+    # @staticmethod
+    # def display_item_stored(item, item_type):
+    #     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    #     print('Hooray! We have just added some {} to our {} list!'
+    #           .format(item.upper(), item_type))
+    #     print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    #
+    # @staticmethod
+    # def display_change_item_type(older, newer):
+    #     print('---   ---   ---   ---   ---   ---   ---   ---   ---   ---   --')
+    #     print('Change item type from "{}" to "{}"'.format(older, newer))
+    #     print('---   ---   ---   ---   ---   ---   ---   ---   ---   ---   --')
+    #
+    # @staticmethod
+    # def display_item_updated(item, o_price, o_quantity, n_price, n_quantity):
+    #     print('---   ---   ---   ---   ---   ---   ---   ---   ---   ---   --')
+    #     print('Change {} price: {} --> {}'
+    #           .format(item, o_price, n_price))
+    #     print('Change {} quantity: {} --> {}'
+    #           .format(item, o_quantity, n_quantity))
+    #     print('---   ---   ---   ---   ---   ---   ---   ---   ---   ---   --')
+    #
+    # @staticmethod
+    # def display_item_deletion(name):
+    #     print('--------------------------------------------------------------')
+    #     print('We have just removed {} from our list'.format(name))
+    #     print('--------------------------------------------------------------')
+
+    @staticmethod
+    @abstractmethod
+    def _table_head():
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _item_as_row(item: object):
+        pass
+
+    @staticmethod
+    def __table_heading(heading: str, table_length: int, heading_length: int):
+        if heading_length >= table_length:
+            return heading
+        else:
+            border = '-' * ((table_length - heading_length // 2) - 1)
+            return f'{border} {heading} {border}'

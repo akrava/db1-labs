@@ -29,14 +29,17 @@ class InvoiceModel(BaseModel):
                        "VALUES (%(date_departure)s, %(date_arrival)s, %(shipping_cost)s, " \
                        "%(sender_ipn)s, %(recipient_ipn)s, %(warehouse_dep_num)s, %(warehouse_arr_num)s) " \
                        "RETURNING num"
-        select_query = "SELECT *, shipping_cost::numeric as shipping_cost_num FROM invoices WHERE num = %s"
+        select_query = "SELECT num, date_departure, date_arrival, shipping_cost::numeric, " \
+                       "sender_ipn, recipient_ipn, warehouse_dep_num, warehouse_arr_num " \
+                       "FROM invoices WHERE num = %s"
         update_query = "UPDATE invoices SET date_departure = %(date_departure)s, " \
                        "date_arrival = %(date_arrival)s, shipping_cost = %(shipping_cost)s, " \
                        "sender_ipn = %(sender_ipn)s, recipient_ipn = %(recipient_ipn)s, " \
                        "warehouse_dep_num = %(warehouse_dep_num)s, warehouse_arr_num = %(warehouse_arr_num)s " \
                        "WHERE num = %(num)s"
         delete_query = "DELETE FROM invoices WHERE num = %s"
-        select_all_query = "SELECT *, shipping_cost::numeric as shipping_cost_num FROM invoices " \
+        select_all_query = "SELECT num, date_departure, date_arrival, shipping_cost::numeric, " \
+                           "sender_ipn, recipient_ipn, warehouse_dep_num, warehouse_arr_num FROM invoices " \
                            "ORDER BY num OFFSET %(offset)s LIMIT %(limit)s"
         count_query = "SELECT COUNT(*) FROM invoices"
         primary_key_name = "num"
@@ -47,12 +50,12 @@ class InvoiceModel(BaseModel):
 
     @staticmethod
     def _get_item_from_row(row: dict):
-        return Invoice(row['date_departure'], row['shipping_cost_num'], row['sender_ipn'], row['recipient_ipn'],
+        return Invoice(row['date_departure'], row['shipping_cost'], row['sender_ipn'], row['recipient_ipn'],
                        row['warehouse_dep_num'], row['warehouse_arr_num'], row['date_arrival'], row['num'])
 
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
         return all(isinstance(item[column], int) for column in ['sender_ipn', 'recipient_ipn',
                                                                 'warehouse_dep_num', 'warehouse_arr_num']) \
                and isinstance(item['date_arrival'], (type(None), date)) and isinstance(item['date_departure'], date) \
-               and isinstance(item['shipping_cost_num'], Decimal) \
+               and isinstance(item['shipping_cost'], Decimal) \
                and super()._is_valid_item_dict(item, pk_required)
