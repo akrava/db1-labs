@@ -4,6 +4,10 @@ from model.goods import Goods
 
 class GoodsView(BaseView):
     @staticmethod
+    def show_item(item: object):
+        pass
+
+    @staticmethod
     def _table_head():
         return ' #id     | height,mm| width,mm| depth,mm| weight,mg| description      | inv#num|'
 

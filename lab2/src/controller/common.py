@@ -5,6 +5,8 @@ from controller.invoice import InvoiceController
 from controller.werehouse import WarehouseController
 from model.common import Model
 from view.common import View
+import psycopg2
+import logging
 
 
 class Controller:
@@ -18,6 +20,13 @@ class Controller:
         self.__warehouse_controller = WarehouseController(connection, self.__common_view)
 
     def start(self):
+        try:
+            self.__common_model.create_tables()
+            logging.info("Successfully created tables in DB if they did not exist")
+        except (Exception, psycopg2.Error) as e:
+            logging.exception(e)
+            print("Couldn't init tables in DB. Exiting...")
+            exit(1)
         self.__common_view.start_app()
         list_menu = ['CRUD operations with relations', 'Batch generation of "randomized" data',
                      'Search by multiple attributes of two entities', 'Full text search',

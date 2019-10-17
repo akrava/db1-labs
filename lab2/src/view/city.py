@@ -4,6 +4,10 @@ from model.city import City
 
 class CityView(BaseView):
     @staticmethod
+    def show_item(item: object):
+        pass
+
+    @staticmethod
     def _table_head():
         return ' #id   | name                |'
 

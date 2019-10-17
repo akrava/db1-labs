@@ -4,6 +4,10 @@ from model.contragent import Contragent
 
 class ContragentView(BaseView):
     @staticmethod
+    def show_item(item: object):
+        pass
+
+    @staticmethod
     def _table_head():
         return ' #ipn      | name                | phone number   |'
 

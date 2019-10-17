@@ -1,4 +1,5 @@
 from psycopg2.extras import DictCursor
+from os import path
 
 
 class Model:
@@ -10,7 +11,8 @@ class Model:
         self.__cursor.close()
 
     def create_tables(self):
-        with open('create_tables.sql', 'r') as f:
+        file_path = path.join(path.dirname(path.abspath(__file__)), '../create_tables.sql')
+        with open(file_path, 'r') as f:
             sql = f.read()
         self.__cursor.execute(sql)
         self.__connection.commit()

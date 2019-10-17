@@ -4,6 +4,10 @@ from model.warehouse import Warehouse
 
 class WarehouseView(BaseView):
     @staticmethod
+    def show_item(item: object):
+        pass
+
+    @staticmethod
     def _table_head():
         return ' #num  | address                         | phone number   | city #id |'
 

@@ -18,6 +18,10 @@ class BaseModel(ABC):
     def __del__(self):
         self._cursor.close()
 
+    @property
+    def primary_key_name(self):
+        return self.__primary_key_name
+
     def create(self, item: object):
         should_return_id = "returning" in self.__insert_query.lower()
         if not self._is_valid_item_dict(item.__dict__, not should_return_id):

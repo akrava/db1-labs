@@ -4,6 +4,10 @@ from model.invoice import Invoice
 
 class InvoiceView(BaseView):
     @staticmethod
+    def show_item(item: object):
+        pass
+
+    @staticmethod
     def _table_head():
         return ' #num | dep date  | arr date  | cost, ₴  | send#ipn| recp#ipn| w d#num| w a#num|'
 

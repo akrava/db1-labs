@@ -19,6 +19,4 @@ if __name__ == '__main__':
             logging.info(f"Opened connection with {DB_NAME} on {DB_HOST}:{DB_PORT}",)
     controller = Controller(connection, "db1-lab2")
     controller.start()
-    del controller
     connection.close()
-    logging.info("Connection closed with db")
