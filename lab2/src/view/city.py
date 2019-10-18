@@ -8,11 +8,11 @@ class CityView(BaseView):
         pass
 
     @staticmethod
-    def _table_head():
+    def _items_table_header():
         return ' #id   | name                |'
 
     @staticmethod
-    def _item_as_row(item: object):
+    def _table_row_from_item(item: object):
         if not isinstance(item, City):
             raise Exception('Item was not a type of City')
-        return f' {item.id:6}| {item.name:20}|'
+        return f' {item.id:6}| {item.name:20.20}|'

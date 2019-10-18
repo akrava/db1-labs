@@ -8,11 +8,11 @@ class WarehouseView(BaseView):
         pass
 
     @staticmethod
-    def _table_head():
+    def _items_table_header():
         return ' #num  | address                         | phone number   | city #id |'
 
     @staticmethod
-    def _item_as_row(item: object):
+    def _table_row_from_item(item: object):
         if not isinstance(item, Warehouse):
             raise Exception('Item was not a type of Warehouse')
-        return f' {item.num:6}| {item.address:32}| {item.phone_number}| {item.city_id:9}|'
+        return f' {item.num:6}| {item.address:32.32}| {item.phone_number}| {item.city_id:9}|'
