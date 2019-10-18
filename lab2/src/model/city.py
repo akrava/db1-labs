@@ -1,3 +1,4 @@
+from settings import is_valid_str
 from model import BaseModel
 
 
@@ -35,7 +36,7 @@ class CityModel(BaseModel):
                          delete_query, select_all_query, count_query, primary_key_name)
 
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
-        return isinstance(item['name'], str) and super()._is_valid_item_dict(item, pk_required)
+        return is_valid_str(item['name']) and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
     def _get_item_from_row(row: dict):

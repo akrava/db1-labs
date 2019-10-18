@@ -10,6 +10,9 @@ class Model:
     def __del__(self):
         self.__cursor.close()
 
+    def rollback(self):
+        self.__connection.rollback()
+
     def create_tables(self):
         file_path = path.join(path.dirname(path.abspath(__file__)), '../create_tables.sql')
         with open(file_path, 'r') as f:

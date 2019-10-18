@@ -18,6 +18,9 @@ class BaseModel(ABC):
     def __del__(self):
         self._cursor.close()
 
+    def rollback(self):
+        self._connection.rollback()
+
     @property
     def primary_key_name(self):
         return self.__primary_key_name

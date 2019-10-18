@@ -1,3 +1,4 @@
+from settings import is_valid_str
 from model import BaseModel
 
 
@@ -46,7 +47,7 @@ class ContragentModel(BaseModel):
                          delete_query, select_all_query, count_query, primary_key_name)
 
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
-        return all(isinstance(item[column], str) for column in ['name', 'phone_number']) \
+        return all(is_valid_str(item[column]) for column in ['name', 'phone_number']) \
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod

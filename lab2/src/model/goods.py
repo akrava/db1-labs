@@ -1,3 +1,4 @@
+from settings import is_valid_str
 from model import BaseModel
 
 
@@ -36,7 +37,7 @@ class GoodsModel(BaseModel):
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
         return all(isinstance(item[column], int) for column in ['height', 'width', 'depth',
                                                                 'weight', 'invoice_num']) \
-               and isinstance(item['description'], (type(None), str)) \
+               and (item['description'] is None or is_valid_str(item['description'])) \
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod

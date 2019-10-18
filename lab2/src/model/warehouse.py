@@ -1,3 +1,4 @@
+from settings import is_valid_str
 from model import BaseModel
 
 
@@ -42,8 +43,8 @@ class WarehouseModel(BaseModel):
                          delete_query, select_all_query, count_query, primary_key_name)
 
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
-        return isinstance(item['city_id'], int) and isinstance(item['address'], str) \
-               and isinstance(item['phone_number'], str) \
+        return isinstance(item['city_id'], int) and is_valid_str(item['address']) \
+               and is_valid_str(item['phone_number']) \
                and super()._is_valid_item_dict(item, pk_required)
 
     @staticmethod
