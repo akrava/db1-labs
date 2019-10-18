@@ -46,9 +46,9 @@ CREATE TABLE IF NOT EXISTS invoices
         ON UPDATE RESTRICT
         ON DELETE RESTRICT,
     CONSTRAINT warehouse_dep_num FOREIGN KEY (warehouse_dep_num)
-        REFERENCES warehouses (num) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        REFERENCES warehouses (num)
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS goods
