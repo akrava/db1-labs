@@ -59,7 +59,7 @@ class BaseModel(ABC):
         if row is not None and self._is_valid_item_dict(row):
             return self._get_item_from_row(row)
         else:
-            raise Exception("No rows received from DB")
+            raise Exception(f"No item with such primary key {pk} was found")
 
     def read_all(self, offset: int = 0, limit: int = None):
         self._cursor.execute(self.__select_all_query, {'limit': limit, 'offset': offset})
@@ -67,7 +67,7 @@ class BaseModel(ABC):
         if isinstance(rows, list) and all(self._is_valid_item_dict(row) for row in rows):
             return [self._get_item_from_row(row) for row in rows]
         else:
-            raise Exception("No rows received from DB")
+            raise Exception("There are no items")
 
     def count_all(self):
         self._cursor.execute(self.__count_query)

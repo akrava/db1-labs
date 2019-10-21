@@ -4,8 +4,11 @@ from model.warehouse import Warehouse
 
 class WarehouseView(BaseView):
     @staticmethod
-    def show_item(item: object):
-        pass
+    def _item_to_text(item: object):
+        if not isinstance(item, Warehouse):
+            raise Exception('Item was not a type of Warehouse')
+        return f'Number: {item.num}\nAddress: {item.address}\nPhone number: {item.phone_number}\n' \
+               f'City ID: {item.city_id}'
 
     @staticmethod
     def _items_table_header():

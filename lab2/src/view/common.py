@@ -1,5 +1,6 @@
 from settings import ConsoleCommands, MessageType
 from typing import Callable
+import textwrap
 import curses
 
 
@@ -38,13 +39,14 @@ class View:
         curses.init_pair(4, curses.COLOR_WHITE, -1)
         curses.init_pair(5, curses.COLOR_YELLOW, -1)
         curses.init_pair(6, curses.COLOR_RED, -1)
+        curses.init_pair(7, curses.COLOR_MAGENTA, -1)
 
     def draw_list(self, items_list: [dict], state_name: str, table_heading: str, list_page_status: str):
         current_index = self.__prev_index if 0 <= self.__prev_index < len(items_list) else 0
 
         def __draw_list_instance(key: int):
             nonlocal current_index
-            current_index = self.__current_index(key, current_index, len(items_list) - 1)
+            current_index = self.__calculate_current_index(key, current_index, len(items_list) - 1)
             self.__draw_subtitle(state_name)
             self.__std_scr.addstr(4, 0, table_heading)
             self.__std_scr.addstr(5, 0, '-' * len(table_heading))
@@ -76,7 +78,7 @@ class View:
 
         def __draw_menu_instance(key: int):
             nonlocal current_index
-            current_index = self.__current_index(key, current_index, len(items_list) - 1)
+            current_index = self.__calculate_current_index(key, current_index, len(items_list) - 1)
             self.__draw_subtitle(state_name)
             y_pos = 4
             for (i, item) in enumerate(items_list):
@@ -96,9 +98,9 @@ class View:
         return self.draw_app(__draw_menu_instance)
 
     def draw_text(self, message: str, type_msg: MessageType = MessageType.INFO):
-        def __draw_text_instance():
+        def __draw_text_instance(key: int):
             self.__draw_subtitle(type_msg.name)
-            color_text_palette = None
+            color_text_palette = 0
             if type_msg == MessageType.ERROR:
                 color_text_palette = curses.color_pair(6)
             elif type_msg == MessageType.SUCCESSFUL:
@@ -107,19 +109,25 @@ class View:
             self.__std_scr.addstr(self.__height - 1, 0, ' ' * (self.__width - 1), curses.color_pair(3))
             status_bar = "Press 'q' to exit | Press any key to go back"
             self.__std_scr.addstr(self.__height - 1, 0, status_bar, curses.color_pair(3))
-            return ConsoleCommands.GO_BACK
+            if key != 0:
+                self.__prev_index = self.__state.pop()
+            return ConsoleCommands.GO_BACK if key != 0 else ConsoleCommands.STANDBY
         return self.draw_app(__draw_text_instance)
 
     def draw_modal_prompt(self, prompt: str, state_name: str):
-        def __draw_modal_prompt():
+        def __draw_modal_prompt(key: int):
             self.__draw_subtitle(state_name)
-            y_offset = self.__height // 2 - 1
-            x_offset = (self.__width - len(prompt)) // 2
-            self.__std_scr.addstr(y_offset, x_offset, prompt)
+            length = 40
+            text_lines = textwrap.wrap(prompt, length)
+            y_offset = (self.__height - len(text_lines)) // 2
+            x_offset = (self.__width - length) // 2
+            for line in text_lines:
+                self.__std_scr.addstr(y_offset, x_offset, line, curses.color_pair(7) | curses.A_BOLD)
+                y_offset += 1
             status_bar = "Input specified data and press Enter"
             self.__std_scr.addstr(self.__height - 1, 0, ' ' * (self.__width - 1), curses.color_pair(3))
             self.__std_scr.addstr(self.__height - 1, 0, status_bar, curses.color_pair(3))
-            input_str = self.__input_wrapper(y_offset + 1, x_offset, self.__width - x_offset - 1)
+            input_str = self.__input_wrapper(y_offset, x_offset, self.__width - x_offset - 1)
             return input_str.decode("utf-8")
         return self.draw_app(__draw_modal_prompt)
 
@@ -128,7 +136,7 @@ class View:
 
         def __draw_input_instance(key: int):
             nonlocal current_index
-            current_index = self.__current_index(key, current_index, len(input_items))
+            current_index = self.__calculate_current_index(key, current_index, len(input_items))
             y_pos = 4
             self.__draw_subtitle(state_name)
             for (i, item) in enumerate(input_items):
@@ -160,7 +168,7 @@ class View:
                 input_items[current_index]["value"] = input_str.decode("utf-8")
                 return ConsoleCommands.STANDBY
             elif (key == curses.KEY_ENTER or key == ord('\n')) and current_index == len(input_items):
-                self.__prev_index = self.__state.pop()
+                # self.__prev_index = self.__state.pop()
                 return ConsoleCommands.CONFIRM
             elif key == curses.KEY_BACKSPACE:
                 self.__prev_index = self.__state.pop()
@@ -189,6 +197,7 @@ class View:
                 return res
             self.__std_scr.refresh()
             key = self.__std_scr.getch()
+        exit(0)
 
     def __draw_subtitle(self, subtitle: str):
         start_x = (self.__width - len(subtitle)) // 2
@@ -204,7 +213,7 @@ class View:
         return input_str
 
     @staticmethod
-    def __current_index(key: int, current_index: int, maximum_index: int):
+    def __calculate_current_index(key: int, current_index: int, maximum_index: int):
         if key == curses.KEY_DOWN:
             current_index += 1
         elif key == curses.KEY_UP:

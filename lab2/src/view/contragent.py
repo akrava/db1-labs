@@ -4,8 +4,11 @@ from model.contragent import Contragent
 
 class ContragentView(BaseView):
     @staticmethod
-    def show_item(item: object):
-        pass
+    def _item_to_text(item: object):
+        if not isinstance(item, Contragent):
+            raise Exception('Item was not a type of Contragent')
+        return f'Name: {item.name}\nIPN: {item.ipn}\n' \
+               f'Phone number: {item.phone_number}'
 
     @staticmethod
     def _items_table_header():

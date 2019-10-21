@@ -4,8 +4,10 @@ from model.city import City
 
 class CityView(BaseView):
     @staticmethod
-    def show_item(item: object):
-        pass
+    def _item_to_text(item: object):
+        if not isinstance(item, City):
+            raise Exception('Item was not a type of City')
+        return f'Name: {item.name}\nID: {item.id}'
 
     @staticmethod
     def _items_table_header():

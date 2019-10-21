@@ -3,6 +3,7 @@ from controller.contragent import ContragentController
 from controller.goods import GoodsController
 from controller.invoice import InvoiceController
 from controller.werehouse import WarehouseController
+from settings import ConsoleCommands
 from model.common import Model
 from view.common import View
 import psycopg2
@@ -24,6 +25,8 @@ class Controller:
             self.__common_model.create_tables()
             logging.info("Successfully created tables in DB if they did not exist")
         except (Exception, psycopg2.Error) as e:
+            if isinstance(e, psycopg2.Error):
+                self.__common_model.rollback()
             logging.exception(e)
             print("Couldn't init tables in DB. Exiting...")
             exit(1)
@@ -56,17 +59,29 @@ class Controller:
             self.__invoice_controller.choose_operation(self.crud_operations)
         elif menu_option == 4:
             self.__goods_controller.choose_operation(self.crud_operations)
-        elif menu_option == 5:
+        elif menu_option == ConsoleCommands.GO_BACK:
             self.start()
 
     def batch_generation_data(self):
-        pass
+        list_menu = []
+        menu_option = self.__common_view.draw_menu(list_menu, 'Batch generation of "randomized" data')
+        if menu_option == ConsoleCommands.GO_BACK:
+            self.start()
 
     def search_multiple_attr(self):
-        pass
+        list_menu = []
+        menu_option = self.__common_view.draw_menu(list_menu, 'Search by multiple attributes')
+        if menu_option == ConsoleCommands.GO_BACK:
+            self.start()
 
     def fulltext_search(self):
-        pass
+        list_menu = []
+        menu_option = self.__common_view.draw_menu(list_menu, 'Full text search')
+        if menu_option == ConsoleCommands.GO_BACK:
+            self.start()
 
     def service_operations(self):
-        pass
+        list_menu = ['Create tables', 'Truncate tables', 'Drop tables']
+        menu_option = self.__common_view.draw_menu(list_menu, 'Service operations with DB')
+        if menu_option == ConsoleCommands.GO_BACK:
+            self.start()

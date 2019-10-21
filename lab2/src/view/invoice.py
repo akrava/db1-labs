@@ -4,8 +4,15 @@ from model.invoice import Invoice
 
 class InvoiceView(BaseView):
     @staticmethod
-    def show_item(item: object):
-        pass
+    def _item_to_text(item: object):
+        if not isinstance(item, Invoice):
+            raise Exception('Item was not a type of Invoice')
+        item_date_arrival = f'{item.date_arrival.strftime("%d.%m.%Y")}' if item.date_arrival is not None else '<empty>'
+        return f'Num: {item.num}\nDate departure: {item.date_departure.strftime("%d.%m.%Y")}\n' \
+               f'Date arrival: {item_date_arrival}\nShipping cost: {item.shipping_cost} ₴\n' \
+               f'Sender IPN: {item.sender_ipn}\nRecipient IPN: {item.recipient_ipn}\n' \
+               f'Warehouse departure number: {item.warehouse_dep_num}\n' \
+               f'Warehouse arrival number: {item.warehouse_arr_num}'
 
     @staticmethod
     def _items_table_header():

@@ -8,9 +8,11 @@ class CityController(BaseController):
         super().__init__(CityModel(connection), CityView('cities', view_driver))
 
     @staticmethod
-    def _prompt_for_item_attributes():
-        return ['Name of city']
+    def _prompt_values_for_input(item: object = None, for_update: bool = False):
+        prompts = ['Name of city']
+        values = [item.name] if isinstance(item, City) else None
+        return prompts, values
 
     @staticmethod
     def _create_obj_from_input(input_items: [dict]):
-        return City([item['value'] for item in input_items if item['name'] is 'Name of city'][0])
+        return City([item['value'] for item in input_items if item['name'] == 'Name of city'][0])

@@ -4,8 +4,13 @@ from model.goods import Goods
 
 class GoodsView(BaseView):
     @staticmethod
-    def show_item(item: object):
-        pass
+    def _item_to_text(item: object):
+        if not isinstance(item, Goods):
+            raise Exception('Item was not a type of Goods')
+        item_description = item.description if item.description is not None else '<empty>'
+        return f'ID: {item.id}\nHeight: {item.height} mm\nWidth: {item.width} mm\n' \
+               f'Depth:{item.depth} mm\nWeight: {item.weight} mg\n' \
+               f'Description: {item_description}\nInvoice number: {item.invoice_num}'
 
     @staticmethod
     def _items_table_header():
