@@ -1,6 +1,8 @@
 import os
 import sys
+import psycopg2
 from enum import IntEnum
+from typing import Callable
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -21,6 +23,11 @@ class MessageType(IntEnum):
 
 def is_valid_str(string):
     return isinstance(string, str) and string.strip()
+
+
+def exception_handler(e: Exception, rollback_cb: Callable):
+    if isinstance(e, psycopg2.Error):
+        rollback_cb()
 
 
 DB_HOST = os.getenv("DB_HOST")

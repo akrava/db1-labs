@@ -25,7 +25,8 @@ class BaseView(ABC):
         table_head = self._items_table_header()
         heading = f'{self.__name.upper()} LIST'
         list_page_status = f'Listed {len(items)} of {count_all}. ' \
-                           f'Page {offset // limit + 1} of {ceil(count_all / limit):d}'
+                           f'Page {offset // limit + 1} of {ceil(count_all / limit):d}' \
+            if count_all > 0 else 'There are no items here'
         items_list = [{'id': getattr(item, primary_key_name),
                        'str': self._table_row_from_item(item)} for item in items]
         return self.__common_view.draw_list(items_list, heading, table_head, list_page_status)

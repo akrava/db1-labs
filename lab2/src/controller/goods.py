@@ -10,7 +10,7 @@ class GoodsController(BaseController):
     @staticmethod
     def _prompt_values_for_input(item: object = None, for_update: bool = False):
         prompts = ['Height (mm)', 'Width (mm)', 'Depth (mm)',
-                   'Weight (mg)', 'Description (could be empty)', 'Invoice number']
+                   'Weight (g)', 'Description (could be empty)', 'Invoice number']
         values = [item.height, item.width, item.depth, item.weight, item.description,
                   item.invoice_num] if isinstance(item, Goods) else None
         return prompts, values
@@ -27,7 +27,7 @@ class GoodsController(BaseController):
                 width = int(item['value'])
             elif item['name'] == 'Depth (mm)':
                 depth = int(item['value'])
-            elif item['name'] == 'Weight (mg)':
+            elif item['name'] == 'Weight (g)':
                 weight = int(item['value'])
             elif item['name'] == 'Description (could be empty)':
                 description = item['value']

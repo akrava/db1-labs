@@ -1,6 +1,6 @@
+from settings import ConsoleCommands, exception_handler
 from typing import Callable, Tuple, Optional
 from abc import ABC, abstractmethod
-from settings import ConsoleCommands
 from model import BaseModel
 from view import BaseView
 import psycopg2
@@ -12,6 +12,10 @@ class BaseController(ABC):
         self.__view = view
         self._cb_show_prev_state = None
 
+    @property
+    def model(self):
+        return self.__model
+
     def show(self, pk: int = None):
         pk_not_specified = pk is None
         if pk_not_specified:
@@ -22,14 +26,13 @@ class BaseController(ABC):
             item = self.__model.read(pk)
             self.__view.show_item(item)
         except (Exception, psycopg2.Error) as e:
-            if isinstance(e, psycopg2.Error):
-                self.__model.rollback()
+            exception_handler(e, self.__model.rollback)
             self.__view.show_error(str(e))
         finally:
-            if not pk_not_specified:
-                self.show_all()
-            else:
+            if pk_not_specified:
                 self.choose_operation()
+            else:
+                self.show_all()
 
     def show_all(self):
         limit = 15
@@ -53,8 +56,7 @@ class BaseController(ABC):
                 else:
                     break
         except (Exception, psycopg2.Error) as e:
-            if isinstance(e, psycopg2.Error):
-                self.__model.rollback()
+            exception_handler(e, self.__model.rollback)
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
@@ -70,8 +72,7 @@ class BaseController(ABC):
                 item = self.__model.create(self._create_obj_from_input(input_items))
                 self.__view.show_created_item(item, pk_name)
             except (Exception, psycopg2.Error) as e:
-                if isinstance(e, psycopg2.Error):
-                    self.__model.rollback()
+                exception_handler(e, self.__model.rollback)
                 self.__view.show_error(str(e))
             finally:
                 self.choose_operation()
@@ -93,8 +94,7 @@ class BaseController(ABC):
                 self.__model.update(new_item)
                 self.__view.show_updated_item(item, new_item)
         except (Exception, psycopg2.Error) as e:
-            if isinstance(e, psycopg2.Error):
-                self.__model.rollback()
+            exception_handler(e, self.__model.rollback)
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
@@ -111,8 +111,7 @@ class BaseController(ABC):
             self.__model.delete(pk)
             self.__view.show_success(f"An item {item} was successfully deleted")
         except (Exception, psycopg2.Error) as e:
-            if isinstance(e, psycopg2.Error):
-                self.__model.rollback()
+            exception_handler(e, self.__model.rollback)
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
