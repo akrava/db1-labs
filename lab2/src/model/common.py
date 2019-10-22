@@ -29,3 +29,25 @@ class Model:
         self.__cursor.execute('DROP TABLE IF EXISTS cities, contragents, '
                               'goods, invoices, warehouses CASCADE')
         self.__connection.commit()
+
+    def filter_items(self, cost_from: int, cost_to: int, sender_name: str = None, recipient_name: str = None):
+        query = "SELECT num, date_departure, date_arrival, shipping_cost, c1.name, " \
+                "c1.phone_number, c2.name, c2.phone_number from invoices i " \
+                "INNER JOIN contragents c1 on i.sender_ipn = c1.ipn " \
+                "INNER JOIN contragents c2 on i.recipient_ipn = c2.ipn " \
+                "WHERE " \
+                "shipping_cost::numeric BETWEEN (%(min)s) AND (%(max)s)"
+        if isinstance(sender_name, str):
+            query += " AND c1.name = (%(sender)s)"
+        if isinstance(recipient_name, str):
+            query += " AND c2.name = (%(recipient)s)"
+        self.__cursor.execute(query, {'min': cost_from, 'max': cost_to,
+                                      'sender': sender_name, 'recipient': recipient_name})
+        rows = self.__cursor.fetchall()
+        if isinstance(rows, list):
+            return rows
+        else:
+            raise Exception("There are no items")
+
+    def fulltext_search(self):
+        pass

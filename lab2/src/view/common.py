@@ -1,7 +1,9 @@
 from settings import ConsoleCommands, MessageType
 from typing import Callable
+from decimal import Decimal
 import textwrap
 import curses
+import sys
 
 
 class View:
@@ -12,6 +14,7 @@ class View:
         self.__height = None
         self.__state = []
         self.__prev_index = 0
+        self.__should_exit = False
 
     def __del__(self):
         if self.__std_scr is not None:
@@ -165,7 +168,10 @@ class View:
                 x_offset = len(input_items[current_index]["name"]) + 2
                 self.__std_scr.addstr(y_pos + current_index, x_offset, ' ' * (self.__width - x_offset))
                 input_str = self.__input_wrapper(y_pos + current_index, x_offset, self.__width - x_offset - 1)
-                input_items[current_index]["value"] = input_str.decode("utf-8")
+                value = input_str.decode("utf-8")
+                if value == "":
+                    value = None
+                input_items[current_index]["value"] = value
                 return ConsoleCommands.STANDBY
             elif (key == curses.KEY_ENTER or key == ord('\n')) and current_index == len(input_items):
                 # self.__prev_index = self.__state.pop()
@@ -177,6 +183,100 @@ class View:
                 return ConsoleCommands.STANDBY
         return self.draw_app(__draw_input_instance)
 
+    def draw_filtering(self, cost_from: Decimal, cost_to: Decimal, names: [str],
+                       sender_i: int = None, recipient_i: int = None):
+        result = {'min': cost_from, 'max': cost_to, 'sender_i': sender_i, 'recipient_i': recipient_i}
+        current_row = 0
+        editing_sender = False
+        editing_recipient = False
+
+        def __draw_filtering_instance(key: int):
+            nonlocal current_row, editing_sender, editing_recipient, result
+            if not editing_sender and not editing_recipient:
+                current_row = self.__calculate_current_index(key, current_row, 4)
+            if editing_sender:
+                result['sender_i'] = self.__calculate_current_index(key, result['sender_i'], len(names) - 1)
+            if editing_recipient:
+                result['recipient_i'] = self.__calculate_current_index(key, result['recipient_i'], len(names) - 1)
+            self.__draw_subtitle('Search by multiple attributes of two entities')
+            y_pos = y_start = 4
+            min_cost_prompt = "From shipping cost, ₴:"
+            max_cost_prompt = "To shipping cost, ₴:"
+            prompts = [min_cost_prompt, max_cost_prompt]
+            values = [result['min'], result['max']]
+            for i, prompt in enumerate(prompts):
+                if i == current_row:
+                    self.__std_scr.addstr(y_pos + i, 0, f'{prompt} {values[i]}', curses.color_pair(2))
+                else:
+                    self.__std_scr.addstr(y_pos + i, 0, f'{prompt} {values[i]}')
+            y_pos += len(prompts)
+            self.__std_scr.addstr(y_pos, 0, '*' * self.__width)
+            y_pos += 1
+            x_pos_half = self.__width // 2
+            send_color = curses.color_pair(2) if current_row == 2 else 0
+            resp_color = curses.color_pair(2) if current_row == 3 else 0
+            self.__std_scr.addstr(y_pos, 0, 'Choose sender name:', send_color)
+            self.__std_scr.addstr(y_pos, x_pos_half, 'Choose recipient name:', resp_color)
+            self.__std_scr.addstr(y_pos + 1, 0, '-' * self.__width)
+            y_pos += 2
+            list_max_len = 12
+            start_i_sender = result['sender_i'] - list_max_len + 1 if result['sender_i'] >= list_max_len else 0
+            start_i_recipient = result['recipient_i'] - list_max_len + 1 if result['recipient_i'] >= list_max_len else 0
+            current_sender_list = names[start_i_sender:start_i_sender + list_max_len]
+            current_recipient_list = names[start_i_recipient:start_i_recipient + list_max_len]
+            for i, name in enumerate(current_sender_list):
+                if start_i_sender + i == result['sender_i']:
+                    self.__std_scr.addstr(y_pos + i, 0, name, curses.color_pair(1))
+                else:
+                    self.__std_scr.addstr(y_pos + i, 0, name)
+            for i, name in enumerate(current_recipient_list):
+                if start_i_recipient + i == result['recipient_i']:
+                    self.__std_scr.addstr(y_pos + i, x_pos_half, name, curses.color_pair(1))
+                else:
+                    self.__std_scr.addstr(y_pos + i, x_pos_half, name)
+            self.__std_scr.addstr(y_pos + list_max_len, 0, '-' * self.__width)
+            color_palette = 0
+            save_button_sign = ' * '
+            status_bar = "Press 'q' to exit | Press any key to go back | "
+            hint_input = 'Press Enter to change data'
+            hint_save = 'Press Enter to proceed'
+            if current_row == len(prompts) + 2:
+                color_palette = curses.color_pair(2)
+                save_button_sign = '-> '
+                status_bar += hint_save
+            else:
+                status_bar += hint_input
+            self.__std_scr.addstr(self.__height - 1, 0, ' ' * (self.__width - 1), curses.color_pair(3))
+            self.__std_scr.addstr(self.__height - 1, 0, status_bar, curses.color_pair(3))
+            self.__std_scr.addstr(self.__height - 2, 0,
+                                  f'{save_button_sign} Confirm entered data', color_palette)
+            if (key == curses.KEY_ENTER or key == ord('\n')) and current_row < len(prompts):
+                x_offset = len(prompts[current_row]) + 1
+                self.__std_scr.addstr(y_start + current_row, x_offset, ' ' * (self.__width - x_offset))
+                input_str = self.__input_wrapper(y_start + current_row, x_offset, self.__width - x_offset - 1)
+                value = input_str.decode("utf-8")
+                if current_row == 0:
+                    result['min'] = value
+                else:
+                    result['max'] = value
+                return ConsoleCommands.STANDBY
+            elif (key == curses.KEY_ENTER or key == ord('\n')) and current_row < len(prompts) + 2:
+                if current_row == 2:
+                    editing_sender = not editing_sender
+                elif current_row == 3:
+                    editing_recipient = not editing_recipient
+                return ConsoleCommands.STANDBY
+            elif (key == curses.KEY_ENTER or key == ord('\n')) and current_row == len(prompts) + 2:
+                # self.__prev_index = self.__state.pop()
+                return result
+            elif key == curses.KEY_BACKSPACE:
+                self.__prev_index = self.__state.pop()
+                return ConsoleCommands.GO_BACK
+            else:
+                return ConsoleCommands.STANDBY
+
+        return self.draw_app(__draw_filtering_instance)
+
     def draw_app(self, draw_main: Callable[[int], int or str]):
         self.__std_scr.clear()
         self.__std_scr.refresh()
@@ -184,7 +284,7 @@ class View:
         title = self.__name
         status_bar = f"Press 'q' to exit | Press Enter to choose option | " \
                      f"Press Backspace to go back "
-        while key != ord('q'):
+        while key != ord('q') and not self.__should_exit:
             self.__std_scr.clear()
             self.__height, self.__width = self.__std_scr.getmaxyx()
             start_x_title = (self.__width - len(title)) // 2
@@ -193,11 +293,13 @@ class View:
             self.__std_scr.addstr(self.__height - 1, 0, ' ' * (self.__width - 1), curses.color_pair(3))
             self.__std_scr.addstr(self.__height - 1, 0, status_bar, curses.color_pair(3))
             res = draw_main(key)
-            if isinstance(res, str) or (isinstance(res, int) and res != ConsoleCommands.STANDBY):
+            if isinstance(res, dict) or isinstance(res, str) \
+                    or (isinstance(res, int) and res != ConsoleCommands.STANDBY):
                 return res
             self.__std_scr.refresh()
             key = self.__std_scr.getch()
-        exit(0)
+        self.__should_exit = True
+        sys.exit(0)
 
     def __draw_subtitle(self, subtitle: str):
         start_x = (self.__width - len(subtitle)) // 2

@@ -4,12 +4,14 @@ CREATE TABLE IF NOT EXISTS contragents
     name         varchar(255) NOT NULL,
     phone_number char(15) NOT NULL
 );
+CREATE INDEX IF NOT EXISTS contragents_names ON contragents USING gin(to_tsvector('english', name));
 
 CREATE TABLE IF NOT EXISTS cities
 (
     id   serial PRIMARY KEY,
     name varchar(255) NOT NULL
 );
+CREATE INDEX IF NOT EXISTS cities_names ON cities USING gin(to_tsvector('english', name));
 
 CREATE TABLE IF NOT EXISTS warehouses
 (
@@ -22,6 +24,7 @@ CREATE TABLE IF NOT EXISTS warehouses
         ON UPDATE RESTRICT
         ON DELETE RESTRICT
 );
+CREATE INDEX IF NOT EXISTS warehouses_addresses ON warehouses USING gin(to_tsvector('english', address));
 
 CREATE TABLE IF NOT EXISTS invoices
 (
@@ -65,3 +68,4 @@ CREATE TABLE IF NOT EXISTS goods
         ON UPDATE RESTRICT
         ON DELETE RESTRICT
 );
+CREATE INDEX IF NOT EXISTS goods_descriptions ON goods USING gin(to_tsvector('english', description));

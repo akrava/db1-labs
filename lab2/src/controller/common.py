@@ -70,7 +70,7 @@ class Controller:
     def batch_generation_data(self):
         try:
             action_name = 'Batch generation of "randomized" data'
-            num_str = self.__common_view.draw_modal_prompt('Enter n > 3 - amount of items to generate:', action_name)
+            num_str = self.__common_view.draw_modal_prompt('Enter n > 2 - amount of items to generate:', action_name)
             n = int(num_str)
             if n < 3:
                 raise Exception(f'n should be > 0, got {n}')
@@ -82,7 +82,7 @@ class Controller:
             self.__warehouse_controller.model.create_many(warehouses, True)
             invoices = self.__random_invoices(contragents, warehouses, n)
             self.__invoice_controller.model.create_many(invoices, True)
-            goods = self.__random_goods(invoices, n)
+            goods = self.__random_goods(invoices, min(n, 10))
             self.__goods_controller.model.create_many(goods, True)
             self.__common_view.draw_text(f"Successfully generated data! Amounts:\n"
                                          f"Cities: {len(cities)}\n"
@@ -96,15 +96,22 @@ class Controller:
         finally:
             self.start()
 
-        list_menu = []
-        menu_option = self.__common_view.draw_menu(list_menu, 'Batch generation of "randomized" data')
-        if menu_option == ConsoleCommands.GO_BACK:
-            self.start()
-
     def search_multiple_attr(self):
-        list_menu = []
-        menu_option = self.__common_view.draw_menu(list_menu, 'Search by multiple attributes')
-        if menu_option == ConsoleCommands.GO_BACK:
+        try:
+            min_cost, max_cost = self.__invoice_controller.model.get_extremum_shipping_cost()
+            names = self.__contragent_controller.model.get_distinct_names()
+            names.insert(0, "<any>")
+            command = self.__common_view.draw_filtering(min_cost, max_cost, names, 0, 0)
+            if command == ConsoleCommands.GO_BACK:
+                return self.start()
+            sender_i = names[command['sender_i']] if names[command['sender_i']] != "<any>" else None
+            recipient_i = names[command['recipient_i']] if names[command['recipient_i']] != "<any>" else None
+            results = self.__common_model.filter_items(command['min'], command['max'], sender_i, recipient_i)
+            self.__common_view.draw_text(str(results))
+        except (Exception, psycopg2.Error) as e:
+            exception_handler(e, self.__common_model.rollback)
+            self.__common_view.draw_text(str(e), MessageType.ERROR)
+        finally:
             self.start()
 
     def fulltext_search(self):

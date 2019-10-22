@@ -46,6 +46,15 @@ class ContragentModel(BaseModel):
         super().__init__(connection, insert_query, select_query, update_query,
                          delete_query, select_all_query, count_query, primary_key_name)
 
+    def get_distinct_names(self):
+        query = "SELECT DISTINCT name from contragents"
+        self._cursor.execute(query)
+        rows = self._cursor.fetchall()
+        if isinstance(rows, list) and all(is_valid_str(row['name']) for row in rows):
+            return [row['name'] for row in rows]
+        else:
+            raise Exception("There are no items")
+
     def _is_valid_item_dict(self, item: dict, pk_required: bool = True):
         return all(is_valid_str(item[column]) for column in ['name', 'phone_number']) \
                and super()._is_valid_item_dict(item, pk_required)

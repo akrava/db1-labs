@@ -48,6 +48,15 @@ class InvoiceModel(BaseModel):
         self.__select_all_with_join_query = ""
         self.__select_with_join_query = ""
 
+    def get_extremum_shipping_cost(self):
+        query = "SELECT min(shipping_cost)::numeric, max(shipping_cost)::numeric from invoices"
+        self._cursor.execute(query)
+        row = self._cursor.fetchone()
+        if row is not None and isinstance(row['max'], Decimal) and isinstance(row['min'], Decimal):
+            return row['min'], row['max']
+        else:
+            raise Exception(f"No rows was found")
+
     @staticmethod
     def _get_item_from_row(row: dict):
         return Invoice(row['date_departure'], row['shipping_cost'], row['sender_ipn'], row['recipient_ipn'],
