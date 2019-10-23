@@ -115,10 +115,28 @@ class Controller:
             self.start()
 
     def fulltext_search(self):
-        list_menu = []
+        list_menu = ['The word is not included', 'Required word occurrence']
         menu_option = self.__common_view.draw_menu(list_menu, 'Full text search')
-        if menu_option == ConsoleCommands.GO_BACK:
+        if menu_option == 0:
+            self.fulltext_search_excluded()
+        elif menu_option == 1:
+            self.fulltext_search_included()
+        elif menu_option == ConsoleCommands.GO_BACK:
             self.start()
+
+    def fulltext_search_excluded(self):
+        pass
+
+    def fulltext_search_included(self):
+        try:
+            command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search including words')
+            res = self.__common_model.fulltext_search(command, True)
+            self.__common_view.draw_text(str(res))
+        except (Exception, psycopg2.Error) as e:
+            exception_handler(e, self.__common_model.rollback)
+            self.__common_view.draw_text(str(e), MessageType.ERROR)
+        finally:
+            self.fulltext_search()
 
     def service_operations(self):
         list_menu = ['Create tables', 'Truncate tables', 'Drop tables']

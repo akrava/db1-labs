@@ -49,5 +49,26 @@ class Model:
         else:
             raise Exception("There are no items")
 
-    def fulltext_search(self):
-        pass
+    def fulltext_search(self, query: str, including: bool):
+        #                 "ORDER BY ts_rank(to_tsvector('english', description), q) DESC"
+        query_including = "SELECT ts_headline(description, q) " \
+                          "FROM goods, plainto_tsquery(%(query)s) AS q " \
+                          "WHERE to_tsvector('english', description) @@ q " \
+                          "UNION " \
+                          "SELECT ts_headline(address, q) " \
+                          "FROM warehouses, plainto_tsquery(%(query)s) AS q " \
+                          "WHERE to_tsvector('english', address) @@ q " \
+                          "UNION " \
+                          "SELECT ts_headline(name, q) " \
+                          "FROM cities, plainto_tsquery(%(query)s) AS q " \
+                          "WHERE to_tsvector('english', name) @@ q " \
+                          "UNION " \
+                          "SELECT ts_headline(name, q) " \
+                          "FROM contragents, plainto_tsquery(%(query)s) AS q " \
+                          "WHERE to_tsvector('english', name) @@ q "
+        self.__cursor.execute(query_including, {'query': query})
+        rows = self.__cursor.fetchall()
+        if isinstance(rows, list):
+            return rows
+        else:
+            raise Exception("There are no items")
