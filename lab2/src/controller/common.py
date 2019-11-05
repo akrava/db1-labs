@@ -125,7 +125,15 @@ class Controller:
             self.start()
 
     def fulltext_search_excluded(self):
-        pass
+        try:
+            command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search excluding words')
+            res = self.__common_model.fulltext_search(command, False)
+            self.__common_view.draw_text(str(res))
+        except (Exception, psycopg2.Error) as e:
+            exception_handler(e, self.__common_model.rollback)
+            self.__common_view.draw_text(str(e), MessageType.ERROR)
+        finally:
+            self.fulltext_search()
 
     def fulltext_search_included(self):
         try:
