@@ -44,7 +44,7 @@ class BaseView(ABC):
             message += f" {pk_name}: {getattr(item, pk_name)}\n{item}"
         return self.show_success(message)
 
-    def show_updated_item(self, before: object, after: object):
+    def show_updated_item(self, before: str, after: object):
         message = f'Item was successfully updated.\n\nBefore update:\n{before}\n\nAfter:\n{after}'
         return self.show_success(message)
 

@@ -1,11 +1,13 @@
 from controller import BaseController
-from model.goods import GoodsModel, Goods
+from sqlalchemy.orm import Session
 from view.goods import GoodsView
+from model.goods import Goods
+from view.common import View
 
 
 class GoodsController(BaseController):
-    def __init__(self, connection, view_driver):
-        super().__init__(GoodsModel(connection), GoodsView('goods', view_driver))
+    def __init__(self, session: Session, view: View):
+        super().__init__(session, Goods, GoodsView('goods', view))
 
     @staticmethod
     def _prompt_values_for_input(item: object = None, for_update: bool = False):
@@ -16,7 +18,7 @@ class GoodsController(BaseController):
         return prompts, values
 
     @staticmethod
-    def _create_obj_from_input(input_items: [dict]):
+    def _create_dict_from_input(input_items: [dict]):
         height = width = depth = weight = description = invoice_number = None
         for item in input_items:
             if item['name'] != 'Description (could be empty)' and int(item['value']) <= 0:
@@ -33,4 +35,5 @@ class GoodsController(BaseController):
                 description = item['value']
             elif item['name'] == 'Invoice number':
                 invoice_number = int(item['value'])
-        return Goods(height, width, depth, weight, invoice_number, description)
+        return dict(height=height, width=width, depth=depth, weight=weight, description=description,
+                    invoice_num=invoice_number)

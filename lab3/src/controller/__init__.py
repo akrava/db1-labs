@@ -1,14 +1,15 @@
-from settings import ConsoleCommands, exception_handler
-from typing import Callable, Tuple, Optional
+from typing import Callable, Tuple, Optional, Type
+from settings import ConsoleCommands
 from abc import ABC, abstractmethod
-from model import BaseModel
+from sqlalchemy.orm import Session
 from view import BaseView
-import psycopg2
+from model import Model
 
 
 class BaseController(ABC):
-    def __init__(self, model: BaseModel, view: BaseView):
-        self.__model = model
+    def __init__(self, session: Session, cls: Type, view: BaseView):
+        self.__model = Model(session, cls)
+        self.__cls = cls
         self.__view = view
         self._cb_show_prev_state = None
 
@@ -25,8 +26,7 @@ class BaseController(ABC):
                 pk = int(pk)
             item = self.__model.read(pk)
             self.__view.show_item(item)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
+        except Exception as e:
             self.__view.show_error(str(e))
         finally:
             if pk_not_specified:
@@ -41,7 +41,7 @@ class BaseController(ABC):
             while True:
                 items = self.__model.read_all(offset, limit)
                 count_all = self.__model.count_all()
-                command = self.__view.show_items_table(items, self.__model.primary_key_name,
+                command = self.__view.show_items_table(items, self.__model.get_primary_key_name(),
                                                        count_all, offset, limit)
                 if command == ConsoleCommands.PREV_PAGE:
                     if offset >= limit:
@@ -55,8 +55,7 @@ class BaseController(ABC):
                     return self.show(command)
                 else:
                     break
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
+        except Exception as e:
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
@@ -68,11 +67,10 @@ class BaseController(ABC):
             return self.choose_operation()
         if command == ConsoleCommands.CONFIRM:
             try:
-                pk_name = self.__model.primary_key_name
-                item = self.__model.create(self._create_obj_from_input(input_items))
+                pk_name = self.__model.get_primary_key_name()
+                item = self.__model.create(self.__create_instance_from_input(input_items))
                 self.__view.show_created_item(item, pk_name)
-            except (Exception, psycopg2.Error) as e:
-                exception_handler(e, self.__model.rollback)
+            except Exception as e:
                 self.__view.show_error(str(e))
             finally:
                 self.choose_operation()
@@ -83,18 +81,18 @@ class BaseController(ABC):
             if isinstance(pk, str):
                 pk = int(pk)
             item = self.__model.read(pk)
+            item_before_str = item.__str__()
             input_items = self.__get_input_items_form(self._prompt_values_for_input(item, True))
             command = self.__view.show_input_item_form(input_items, 'Update')
             if command == ConsoleCommands.GO_BACK:
                 return self.choose_operation()
             if command == ConsoleCommands.CONFIRM:
-                new_item = self._create_obj_from_input(input_items)
-                pk_name = self.__model.primary_key_name
-                setattr(new_item, pk_name, getattr(item, pk_name))
-                self.__model.update(new_item)
-                self.__view.show_updated_item(item, new_item)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
+                new_item_dict = self._create_dict_from_input(input_items)
+                pk_name = self.__model.get_primary_key_name()
+                new_item_dict[pk_name] = getattr(item, pk_name)
+                new_item = self.__model.update(new_item_dict)
+                self.__view.show_updated_item(item_before_str, new_item)
+        except Exception as e:
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
@@ -110,8 +108,7 @@ class BaseController(ABC):
                 return self.choose_operation()
             self.__model.delete(pk)
             self.__view.show_success(f"An item {item} was successfully deleted")
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
+        except Exception as e:
             self.__view.show_error(str(e))
         finally:
             self.choose_operation()
@@ -147,5 +144,8 @@ class BaseController(ABC):
 
     @staticmethod
     @abstractmethod
-    def _create_obj_from_input(input_items: [dict]):
+    def _create_dict_from_input(input_items: [dict]):
         pass
+
+    def __create_instance_from_input(self, input_items: [dict]):
+        return self.__cls(**self._create_dict_from_input(input_items))

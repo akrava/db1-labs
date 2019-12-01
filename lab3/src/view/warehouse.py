@@ -18,4 +18,4 @@ class WarehouseView(BaseView):
     def _table_row_from_item(item: object):
         if not isinstance(item, Warehouse):
             raise Exception('Item was not a type of Warehouse')
-        return f' {item.num:6}| {item.address:32.32}| {item.phone_number}| {item.city_id:9}|'
+        return f' {item.num:6}| {item.address:32.32}| {item.phone_number:15.15}| {item.city_id:9}|'

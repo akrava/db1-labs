@@ -1,15 +1,14 @@
-from settings import ConsoleCommands, MessageType, exception_handler
 from controller.contragent import ContragentController, Contragent
 from controller.werehouse import WarehouseController, Warehouse
 from controller.invoice import InvoiceController, Invoice
 from controller.goods import GoodsController, Goods
+from settings import ConsoleCommands, MessageType
 from controller.city import CityController, City
 from model.common import Model
 from view.common import View
 from typing import Callable
 from datetime import date
 import urllib.request
-import psycopg2
 import decimal
 import logging
 import random
@@ -17,21 +16,21 @@ import json
 
 
 class Controller:
-    def __init__(self, connection, program_name):
+    def __init__(self, dialect: str, host: str, port: int, db_name: str, user: str, password: str, program_name: str):
         self.__common_view = View(program_name)
-        self.__common_model = Model(connection)
-        self.__city_controller = CityController(connection, self.__common_view)
-        self.__contragent_controller = ContragentController(connection, self.__common_view)
-        self.__goods_controller = GoodsController(connection, self.__common_view)
-        self.__invoice_controller = InvoiceController(connection, self.__common_view)
-        self.__warehouse_controller = WarehouseController(connection, self.__common_view)
+        self.__common_model = Model(dialect, host, port, db_name, user, password)
+        session = self.__common_model.session()
+        self.__city_controller = CityController(session, self.__common_view)
+        self.__contragent_controller = ContragentController(session, self.__common_view)
+        self.__goods_controller = GoodsController(session, self.__common_view)
+        self.__invoice_controller = InvoiceController(session, self.__common_view)
+        self.__warehouse_controller = WarehouseController(session, self.__common_view)
 
     def start(self):
         try:
             self.__common_model.create_tables()
             logging.info("Successfully created tables in DB if they did not exist")
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             logging.exception(e)
             print("Couldn't init tables in DB. Exiting...")
             exit(1)
@@ -75,23 +74,22 @@ class Controller:
             if n < 3:
                 raise Exception(f'n should be > 0, got {n}')
             cities = self.__random_cities(n)
-            self.__city_controller.model.create_many(cities, True)
+            self.__city_controller.model.create_many(cities)
             contragents = self.__random_contragents(n)
-            self.__contragent_controller.model.create_many(contragents, True)
+            self.__contragent_controller.model.create_many(contragents)
             warehouses = self.__random_warehouses(cities, n)
-            self.__warehouse_controller.model.create_many(warehouses, True)
+            self.__warehouse_controller.model.create_many(warehouses)
             invoices = self.__random_invoices(contragents, warehouses, n)
-            self.__invoice_controller.model.create_many(invoices, True)
+            self.__invoice_controller.model.create_many(invoices)
             goods = self.__random_goods(invoices, min(n, 10))
-            self.__goods_controller.model.create_many(goods, True)
+            self.__goods_controller.model.create_many(goods)
             self.__common_view.draw_text(f"Successfully generated data! Amounts:\n"
                                          f"Cities: {len(cities)}\n"
                                          f"Contragents: {len(contragents)}\n"
                                          f"Warehouses: {len(warehouses)}\n"
                                          f"Invoices: {len(invoices)}\n"
                                          f"Goods: {len(goods)}", MessageType.SUCCESSFUL)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.start()
@@ -108,8 +106,7 @@ class Controller:
             recipient_i = names[command['recipient_i']] if names[command['recipient_i']] != "<any>" else None
             results = self.__common_model.filter_items(command['min'], command['max'], sender_i, recipient_i)
             self.__common_view.draw_text(str(results))
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.start()
@@ -129,8 +126,7 @@ class Controller:
             command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search excluding words')
             res = self.__common_model.fulltext_search(command, False)
             self.__common_view.draw_text(str(res))
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.fulltext_search()
@@ -140,8 +136,7 @@ class Controller:
             command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search including words')
             res = self.__common_model.fulltext_search(command, True)
             self.__common_view.draw_text(str(res))
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.fulltext_search()
@@ -162,8 +157,7 @@ class Controller:
         try:
             self.__common_model.create_tables()
             self.__common_view.draw_text("Successfully created tables if not exists", MessageType.SUCCESSFUL)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.service_operations()
@@ -175,7 +169,7 @@ class Controller:
 
     def drop_tables(self):
         self.__perform_risky_action('drop tables', 'Dropping tables',
-                                    self.__common_model.truncate_tables,
+                                    self.__common_model.drop_tables,
                                     'dropped tables')
 
     def __perform_risky_action(self, purpose: str, action_name: str, action_cb: Callable, success: str):
@@ -184,8 +178,7 @@ class Controller:
             if command.strip().lower() == "yes":
                 action_cb()
                 self.__common_view.draw_text(f"Successfully {success}", MessageType.SUCCESSFUL)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__common_model.rollback)
+        except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.service_operations()
@@ -194,7 +187,7 @@ class Controller:
 
     @staticmethod
     def __random_cities(amount: int = 1):
-        return [City(name) for name in Controller.__random_city_name(amount)]
+        return [City(name=name) for name in Controller.__random_city_name(amount)]
 
     @staticmethod
     def __random_contragents(amount: int = 1):
@@ -207,7 +200,7 @@ class Controller:
             if val not in ipn_set:
                 ipn_set.add(val)
                 counter += 1
-        return [Contragent(ipn, name, phone_number) for name, phone_number, ipn
+        return [Contragent(ipn=ipn, name=name, phone_number=phone_number) for name, phone_number, ipn
                 in zip(names, phone_numbers, ipn_set)]
 
     @staticmethod
@@ -219,8 +212,8 @@ class Controller:
         while counter < amount:
             city_ids.append(Controller.__get_random_element(cities).id)
             counter += 1
-        return [Warehouse(address, phone_number, city_id) for address, phone_number, city_id
-                in zip(addresses, phone_numbers, city_ids)]
+        return [Warehouse(address=address, phone_number=phone_number, city_id=city_id)
+                for address, phone_number, city_id in zip(addresses, phone_numbers, city_ids)]
 
     @staticmethod
     def __random_invoices(contragents: [Contragent], warehouses: [Warehouse], amount: int = 1):
@@ -235,7 +228,8 @@ class Controller:
             Controller.__append_uniq_elements(senders_ipn, recipients_ipn, contragents, 'ipn')
             Controller.__append_uniq_elements(warehouse_dep_nums, warehouse_arr_nums, warehouses, 'num')
             counter += 1
-        return [Invoice(date_dep, cost, send_ipn, recp_ipn, war_dep_num, war_arr_num, date_arr)
+        return [Invoice(date_departure=date_dep, shipping_cost=cost, sender_ipn=send_ipn, recipient_ipn=recp_ipn,
+                        warehouse_dep_num=war_dep_num, warehouse_arr_num=war_arr_num, date_arrival=date_arr)
                 for date_dep, date_arr, cost, send_ipn, recp_ipn, war_dep_num, war_arr_num
                 in zip(dates_dep, dates_arr, shipping_costs, senders_ipn, recipients_ipn,
                        warehouse_dep_nums, warehouse_arr_nums)]
@@ -256,7 +250,8 @@ class Controller:
         depths = [random.randint(100 + i, 10000 + i) for i in range(amount)]
         weights = [random.randint(100 + i, 1000000 + i) for i in range(amount)]
         descriptions = Controller.__random_description(amount, True)
-        return [Goods(height, width, depth, weight, inv_id, description)
+        return [Goods(height=height, width=width, depth=depth, weight=weight, invoice_num=inv_id,
+                      description=description)
                 for height, width, depth, weight, description, inv_id
                 in zip(heights, widths, depths, weights, descriptions, invoices_id)]
 

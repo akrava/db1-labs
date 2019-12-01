@@ -1,11 +1,13 @@
-from controller import BaseController
-from model.warehouse import WarehouseModel, Warehouse
 from view.warehouse import WarehouseView
+from controller import BaseController
+from model.warehouse import Warehouse
+from sqlalchemy.orm import Session
+from view.common import View
 
 
 class WarehouseController(BaseController):
-    def __init__(self, connection, view_driver):
-        super().__init__(WarehouseModel(connection), WarehouseView('warehouses', view_driver))
+    def __init__(self, session: Session, view: View):
+        super().__init__(session, Warehouse, WarehouseView('warehouses', view))
 
     @staticmethod
     def _prompt_values_for_input(item: object = None, for_update: bool = False):
@@ -15,7 +17,7 @@ class WarehouseController(BaseController):
         return prompts, values
 
     @staticmethod
-    def _create_obj_from_input(input_items: [dict]):
+    def _create_dict_from_input(input_items: [dict]):
         address = phone_number = city_id = None
         for item in input_items:
             if item['name'] == 'Address':
@@ -24,4 +26,4 @@ class WarehouseController(BaseController):
                 phone_number = item['value']
             elif item['name'] == 'City ID':
                 city_id = int(item['value'])
-        return Warehouse(address, phone_number, city_id)
+        return dict(address=address, phone_number=phone_number, city_id=city_id)

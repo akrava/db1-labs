@@ -1,11 +1,13 @@
 from controller import BaseController
-from model.city import CityModel, City
+from sqlalchemy.orm import Session
 from view.city import CityView
+from view.common import View
+from model.city import City
 
 
 class CityController(BaseController):
-    def __init__(self, connection, view_driver):
-        super().__init__(CityModel(connection), CityView('cities', view_driver))
+    def __init__(self, session: Session, view: View):
+        super().__init__(session, City, CityView('cities', view))
 
     @staticmethod
     def _prompt_values_for_input(item: object = None, for_update: bool = False):
@@ -14,5 +16,5 @@ class CityController(BaseController):
         return prompts, values
 
     @staticmethod
-    def _create_obj_from_input(input_items: [dict]):
-        return City([item['value'] for item in input_items if item['name'] == 'Name of city'][0])
+    def _create_dict_from_input(input_items: [dict]):
+        return {'name': [item['value'] for item in input_items if item['name'] == 'Name of city'][0]}
