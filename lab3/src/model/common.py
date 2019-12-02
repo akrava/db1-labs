@@ -1,5 +1,7 @@
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, close_all_sessions
+from sqlalchemy import create_engine, MetaData, func
+from model.invoice import Invoice
+from model.goods import Goods
 from model import Base
 
 
@@ -9,6 +11,10 @@ class Model:
         session_class = sessionmaker(bind=self.__engine)
         self.__session = session_class()
 
+    def __del__(self):
+        self.__session.commit()
+        self.__session.close_all()
+
     def session(self):
         return self.__session
 
@@ -16,53 +22,47 @@ class Model:
         Base.metadata.create_all(self.__engine)
 
     def truncate_tables(self):
-        pass
-        # self.__cursor.execute('TRUNCATE ONLY cities, contragents, goods, '
-        #                       'invoices, warehouses RESTART IDENTITY CASCADE')
-        # self.__connection.commit()
+        meta = MetaData(bind=self.__engine, reflect=True)
+        for tbl in reversed(meta.sorted_tables):
+            self.__session.execute(tbl.delete())
+            self.__session.commit()
 
     def drop_tables(self):
+        close_all_sessions()
         Base.metadata.drop_all(self.__engine)
 
     def filter_items(self, cost_from: int, cost_to: int, sender_name: str = None, recipient_name: str = None):
-        pass
-        # query = "SELECT num, date_departure, date_arrival, shipping_cost, c1.name, " \
-        #         "c1.phone_number, c2.name, c2.phone_number from invoices i " \
-        #         "INNER JOIN contragents c1 on i.sender_ipn = c1.ipn " \
-        #         "INNER JOIN contragents c2 on i.recipient_ipn = c2.ipn " \
-        #         "WHERE " \
-        #         "shipping_cost::numeric BETWEEN (%(min)s) AND (%(max)s)"
-        # if isinstance(sender_name, str):
-        #     query += " AND c1.name = (%(sender)s)"
-        # if isinstance(recipient_name, str):
-        #     query += " AND c2.name = (%(recipient)s)"
-        # self.__cursor.execute(query, {'min': cost_from, 'max': cost_to,
-        #                               'sender': sender_name, 'recipient': recipient_name})
-        # rows = self.__cursor.fetchall()
-        # if isinstance(rows, list):
-        #     return rows
-        # else:
-        #     raise Exception("There are no items")
+        query = self.__session.query(Invoice).filter(Invoice.shipping_cost.between(cost_from, cost_to))
+        if isinstance(sender_name, str):
+            query = query.filter(Invoice.sender.has(name=sender_name))
+        if isinstance(recipient_name, str):
+            query = query.filter(Invoice.recipient.has(name=recipient_name))
+        return query.all()
 
     def fulltext_search(self, query: str, including: bool):
-        pass
-        # if not including:
-        #     words = query.split()
-        #     if len(words) > 0:
-        #         words[0] = "!" + words[0]
-        #     counter = 1
-        #     while counter < len(words):
-        #         words[counter] = "& !" + words[counter]
-        #     query = ' '.join(words)
-        # query_excluding = "SELECT ts_headline(description, q) " \
-        #                   "FROM goods, to_tsquery('english', %(query)s) AS q " \
-        #                   "WHERE to_tsvector('english', description) @@ q "
-        # query_including = "SELECT ts_headline(description, q) " \
-        #                   "FROM goods, plainto_tsquery('english', %(query)s) AS q " \
-        #                   "WHERE to_tsvector('english', description) @@ q "
-        # self.__cursor.execute(query_including if including else query_excluding, {'query': query})
-        # rows = self.__cursor.fetchall()
-        # if isinstance(rows, list):
-        #     return rows
-        # else:
-        #     raise Exception("There are no items")
+        """
+        SELECT id, ts_headline(description, q) FROM (
+            SELECT id, description, q
+                FROM goods, to_tsquery('english', 'query & here') q
+                WHERE to_tsvector('english', description) @@ q
+        ) search_t;
+        """
+        query = self.__prepare_query(query, including)
+        q = func.to_tsquery('english', query)
+        inner_statement = self.__session \
+            .query(Goods.id, Goods.description, q) \
+            .select_from(q) \
+            .filter(func.to_tsvector('english', Goods.description).match(query, postgresql_regconfig='english')) \
+            .subquery()
+        return self.__session.query(inner_statement.c.id, func.ts_headline(inner_statement.c.description, q)).all()
+
+    @staticmethod
+    def __prepare_query(query: str, including: bool):
+        words = query.split()
+        if len(words) > 0 and not including:
+            words[0] = "!" + words[0]
+        counter = 1
+        while counter < len(words):
+            words[counter] = f"& {'!' if not including else ''}" + words[counter]
+            counter += 1
+        return ' '.join(words)

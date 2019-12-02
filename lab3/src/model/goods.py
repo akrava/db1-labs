@@ -19,7 +19,7 @@ class Goods(Base):
 
     __table_args__ = (
         Index(
-            'goods_descriptions',
+            'goods_descriptions_index',
             func.to_tsvector('english', description),
             postgresql_using='gin'
         ),

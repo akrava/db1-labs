@@ -96,8 +96,9 @@ class Controller:
 
     def search_multiple_attr(self):
         try:
-            min_cost, max_cost = self.__invoice_controller.model.get_extremum_shipping_cost()
-            names = self.__contragent_controller.model.get_distinct_names()
+            session = self.__common_model.session()
+            min_cost, max_cost = Invoice.get_extremum_shipping_cost(session)
+            names = Contragent.get_distinct_names(session)
             names.insert(0, "<any>")
             command = self.__common_view.draw_filtering(min_cost, max_cost, names, 0, 0)
             if command == ConsoleCommands.GO_BACK:
@@ -105,8 +106,9 @@ class Controller:
             sender_i = names[command['sender_i']] if names[command['sender_i']] != "<any>" else None
             recipient_i = names[command['recipient_i']] if names[command['recipient_i']] != "<any>" else None
             results = self.__common_model.filter_items(command['min'], command['max'], sender_i, recipient_i)
-            self.__common_view.draw_text(str(results))
+            self.__common_view.view_search_results(results)
         except Exception as e:
+            self.__common_model.session().rollback()
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
             self.start()
@@ -125,7 +127,7 @@ class Controller:
         try:
             command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search excluding words')
             res = self.__common_model.fulltext_search(command, False)
-            self.__common_view.draw_text(str(res))
+            self.__common_view.view_search_results(res)
         except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:
@@ -135,7 +137,7 @@ class Controller:
         try:
             command = self.__common_view.draw_modal_prompt('Enter query:', 'Fulltext search including words')
             res = self.__common_model.fulltext_search(command, True)
-            self.__common_view.draw_text(str(res))
+            self.__common_view.view_search_results(res)
         except Exception as e:
             self.__common_view.draw_text(str(e), MessageType.ERROR)
         finally:

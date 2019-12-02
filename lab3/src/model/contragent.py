@@ -15,4 +15,4 @@ class Contragent(Base):
 
     @staticmethod
     def get_distinct_names(session: Session):
-        return session.query(Contragent.name).all()
+        return [name for (name,) in session.query(Contragent.name).all()]

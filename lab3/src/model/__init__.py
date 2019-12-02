@@ -40,6 +40,7 @@ class Model:
         pk = item[pk_name]
         try:
             self.__session.query(self._cls).filter_by(**{pk_name: pk}).update(item)
+            self.__session.commit()
         except Exception:
             self.__session.rollback()
             raise
@@ -49,6 +50,7 @@ class Model:
         pk_name = self.get_primary_key_name()
         try:
             self.__session.query(self._cls).filter_by(**{pk_name: pk}).delete()
+            self.__session.commit()
         except Exception:
             self.__session.rollback()
             raise

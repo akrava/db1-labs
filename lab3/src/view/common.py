@@ -1,6 +1,7 @@
 from settings import ConsoleCommands, MessageType
 from typing import Callable
 from decimal import Decimal
+from os import linesep
 import textwrap
 import curses
 import sys
@@ -94,7 +95,7 @@ class View:
                 self.__prev_index = 0
                 return current_index
             elif key == curses.KEY_BACKSPACE and not is_root_menu:
-                self.__prev_index = self.__state.pop()
+                self.__prev_index = self.__state.pop() if len(self.__state) > 0 else 0
                 return ConsoleCommands.GO_BACK
             else:
                 return ConsoleCommands.STANDBY
@@ -323,3 +324,14 @@ class View:
         current_index = max(0, current_index)
         current_index = min(maximum_index, current_index)
         return current_index
+
+    def view_search_results(self, items: [object]):
+        length = len(items)
+        string = ""
+        if length is 0:
+            string += "Nothing was found"
+        else:
+            string += f"Found {length} items:{linesep}"
+            for item in items:
+                string += item.__str__() + linesep
+        self.draw_text(string)
