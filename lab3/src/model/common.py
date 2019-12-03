@@ -1,8 +1,9 @@
 from sqlalchemy.orm import sessionmaker, close_all_sessions
-from sqlalchemy import create_engine, MetaData, func
+from sqlalchemy import create_engine, MetaData, func, text
 from model.invoice import Invoice
 from model.goods import Goods
 from model import Base
+from os import path
 
 
 class Model:
@@ -13,13 +14,19 @@ class Model:
 
     def __del__(self):
         self.__session.commit()
-        self.__session.close_all()
+        close_all_sessions()
 
     def session(self):
         return self.__session
 
     def create_tables(self):
+        # close_all_sessions()
         Base.metadata.create_all(self.__engine)
+        file_path = path.join(path.dirname(path.abspath(__file__)), '../goods_trigger.sql')
+        with open(file_path, 'r') as f:
+            sql = f.read()
+        self.__session.execute(text(sql))
+        self.__session.commit()
 
     def truncate_tables(self):
         meta = MetaData(bind=self.__engine, reflect=True)

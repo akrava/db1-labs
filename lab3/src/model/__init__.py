@@ -30,7 +30,8 @@ class Model:
 
     def read_all(self, offset: int = 0, limit: int = None):
         pk_name = self.get_primary_key_name()
-        return self.__session.query(self._cls).order_by(asc(pk_name)).offset(offset).limit(limit).all()
+        items = self.__session.query(self._cls).order_by(asc(pk_name)).offset(offset).limit(limit).all()
+        return items
 
     def count_all(self):
         return self.__session.query(self._cls).count()

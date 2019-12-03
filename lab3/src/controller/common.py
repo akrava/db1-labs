@@ -1,4 +1,5 @@
 from controller.contragent import ContragentController, Contragent
+from controller.reweightings import ReweightingsController
 from controller.werehouse import WarehouseController, Warehouse
 from controller.invoice import InvoiceController, Invoice
 from controller.goods import GoodsController, Goods
@@ -25,6 +26,7 @@ class Controller:
         self.__goods_controller = GoodsController(session, self.__common_view)
         self.__invoice_controller = InvoiceController(session, self.__common_view)
         self.__warehouse_controller = WarehouseController(session, self.__common_view)
+        self.__reweightings_controller = ReweightingsController(session, self.__common_view)
 
     def start(self):
         try:
@@ -51,7 +53,7 @@ class Controller:
             self.service_operations()
 
     def crud_operations(self):
-        list_menu = ['Contragents', 'Cities', 'Warehouses', 'Invoices', 'Goods']
+        list_menu = ['Contragents', 'Cities', 'Warehouses', 'Invoices', 'Goods', 'Reweightings']
         menu_option = self.__common_view.draw_menu(list_menu, 'CRUD operations with relations')
         if menu_option == 0:
             self.__contragent_controller.choose_operation(self.crud_operations)
@@ -63,6 +65,8 @@ class Controller:
             self.__invoice_controller.choose_operation(self.crud_operations)
         elif menu_option == 4:
             self.__goods_controller.choose_operation(self.crud_operations)
+        elif menu_option == 5:
+            self.__reweightings_controller.choose_operation(self.crud_operations)
         elif menu_option == ConsoleCommands.GO_BACK:
             self.start()
 
