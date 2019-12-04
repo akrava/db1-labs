@@ -302,7 +302,7 @@ class Controller:
 
     @staticmethod
     def __random_description(amount: int = 1, enable_none: bool = False):
-        url = f"https://makemeapassword.ligos.net/api/v1/passphrase/json"
+        url = f"http://www.randomtext.me/api/gibberish/p-1/2-5/"
         descriptions = []
         count = 0
         while count < amount:
@@ -310,7 +310,7 @@ class Controller:
                 descriptions.append(None)
             else:
                 content = Controller.__get_content(url)
-                descriptions.append(content['pws'][0])
+                descriptions.append(content['text_out'][3:-5])
             count += 1
         return descriptions
 
@@ -348,6 +348,9 @@ class Controller:
 
     @staticmethod
     def __get_content(url: str):
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/35.0.1916.47 Safari/537.36'
+        })
         r = urllib.request.urlopen(req).read()
         return json.loads(r.decode('utf-8'))

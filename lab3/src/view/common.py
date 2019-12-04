@@ -102,20 +102,33 @@ class View:
         return self.draw_app(__draw_menu_instance)
 
     def draw_text(self, message: str, type_msg: MessageType = MessageType.INFO):
+        offset = 0
+
         def __draw_text_instance(key: int):
+            nonlocal offset
             self.__draw_subtitle(type_msg.name)
             color_text_palette = 0
             if type_msg == MessageType.ERROR:
                 color_text_palette = curses.color_pair(6)
             elif type_msg == MessageType.SUCCESSFUL:
                 color_text_palette = curses.color_pair(2)
-            self.__std_scr.addstr(4, 0, message, color_text_palette)
+            message_size = 800
+            self.__std_scr.addstr(4, 0, message[offset:min(offset + message_size, len(message)-1)], color_text_palette)
+            offset += message_size
             self.__std_scr.addstr(self.__height - 1, 0, ' ' * (self.__width - 1), curses.color_pair(3))
             status_bar = "Press 'q' to exit | Press any key to go back"
             self.__std_scr.addstr(self.__height - 1, 0, status_bar, curses.color_pair(3))
+            if key == curses.KEY_LEFT:
+                offset = 0
+                return ConsoleCommands.STANDBY
+            elif key == curses.KEY_RIGHT:
+                offset = min(len(message)-1, offset + message_size)
+                return ConsoleCommands.STANDBY
             if key != 0:
                 self.__prev_index = self.__state.pop()
-            return ConsoleCommands.GO_BACK if key != 0 else ConsoleCommands.STANDBY
+            if key != 0 and (key != curses.KEY_RIGHT and key != curses.KEY_LEFT):
+                return ConsoleCommands.GO_BACK
+            return ConsoleCommands.STANDBY
         return self.draw_app(__draw_text_instance)
 
     def draw_modal_prompt(self, prompt: str, state_name: str):
@@ -334,4 +347,7 @@ class View:
             string += f"Found {length} items:{linesep}"
             for item in items:
                 string += item.__str__() + linesep
-        self.draw_text(string)
+        while True:
+            res = self.draw_text(string)
+            if res != ConsoleCommands.NEXT_PAGE and res != ConsoleCommands.PREV_PAGE:
+                break

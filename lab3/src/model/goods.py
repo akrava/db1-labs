@@ -23,6 +23,16 @@ class Goods(Base):
             func.to_tsvector('english', description),
             postgresql_using='gin'
         ),
+        Index(
+            'volume_index',
+            height, width, depth,
+            postgresql_using='brin'
+        ),
+        Index(
+            'invoice_num_index',
+            invoice_num,
+            postgresql_using='btree'
+        ),
     )
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Date, DECIMAL, func
+from sqlalchemy import Column, Integer, ForeignKey, Date, DECIMAL, func, Index
 from sqlalchemy.orm import Session, relationship
 from model import Base
 
@@ -23,6 +23,19 @@ class Invoice(Base):
     recipient = relationship("Contragent", backref="invoices_inbox", foreign_keys=[recipient_ipn])
     warehouse_arrival = relationship("Warehouse", backref="invoices_arriving", foreign_keys=[warehouse_arr_num])
     warehouse_departure = relationship("Warehouse", backref="invoices_departing", foreign_keys=[warehouse_dep_num])
+
+    __table_args__ = (
+        Index(
+            'sender_ipn_index',
+            sender_ipn,
+            postgresql_using='btree'
+        ),
+        Index(
+            'shipping_cost_index',
+            shipping_cost,
+            postgresql_using='brin'
+        ),
+    )
 
     def __str__(self):
         return f"Invoice [num={self.num}, date_departure={self.date_departure}, date_arrival={self.date_arrival}, " \

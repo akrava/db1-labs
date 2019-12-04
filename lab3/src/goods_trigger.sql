@@ -19,8 +19,7 @@ CREATE OR REPLACE function goods_trigger() returns trigger as $$
             INSERT INTO reweightings (weight_before, weight_after, date_inspection, parcel_id)
                 VALUES (old.weight, new.weight, current_timestamp, new.id);
         elseif old is null then
-            description_with_time = coalesce(new.description, '')
-                                    || ' added to db at: ' || current_timestamp::char(19);
+            description_with_time = coalesce(new.description, '') || ' added to db at: ' || current_timestamp::char(19);
             UPDATE goods SET description = description_with_time WHERE id = new.id;
         end if;
         for current_word in SELECT word FROM prohibited_items_dict loop
