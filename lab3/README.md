@@ -336,6 +336,7 @@ CREATE trigger goods_helper AFTER UPDATE OR INSERT on goods for each row EXECUTE
     </tr>
     <tr>
         <td>
+        
             ```sql
                 -- #1
                 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -351,6 +352,7 @@ CREATE trigger goods_helper AFTER UPDATE OR INSERT on goods for each row EXECUTE
             ```
         </td>
         <td>
+        
             ```sql
                 -- #1
                 <br>
