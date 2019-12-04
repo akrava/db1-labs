@@ -361,6 +361,8 @@ UPDATE invoices SET shipping_cost = 101.12 WHERE num = 1;
 <br>
 -- #4
 COMMIT;
+<br>
+<br>
             </pre>
         </td>
     </tr>
