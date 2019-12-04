@@ -336,8 +336,7 @@ CREATE trigger goods_helper AFTER UPDATE OR INSERT on goods for each row EXECUTE
     </tr>
     <tr>
         <td>
-        
-            ```sql
+            <pre lang="sql">
                 -- #1
                 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
                 SELECT shipping_cost FROM invoices WHERE num = 1;
@@ -349,11 +348,10 @@ CREATE trigger goods_helper AFTER UPDATE OR INSERT on goods for each row EXECUTE
                 <br>
                 -- #5
                 SELECT shipping_cost FROM invoices WHERE num = 1;
-            ```
+            </pre>>
         </td>
         <td>
-        
-            ```sql
+            <pre lang="sql">
                 -- #1
                 <br>
                 -- #2
@@ -363,7 +361,7 @@ CREATE trigger goods_helper AFTER UPDATE OR INSERT on goods for each row EXECUTE
                 <br>
                 -- #4
                 COMMIT;
-            ```
+            </pre>
         </td>
     </tr>
 </table>
