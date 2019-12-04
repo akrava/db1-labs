@@ -342,6 +342,7 @@ BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
 SELECT shipping_cost FROM invoices WHERE num = 1;
 -- #2
 <br>
+<br>
 -- #3
 SELECT shipping_cost FROM invoices WHERE num = 1;
 -- #4
@@ -353,6 +354,7 @@ SELECT shipping_cost FROM invoices WHERE num = 1;
         <td>
             <pre lang="sql">
 -- #1
+<br>
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
