@@ -249,7 +249,43 @@ class Warehouse(Base):
 
 ## Завдання №2: команди створення індексів, тексти і час виконання запитів SQL
 
-...
+### Команди SQL створення індексів
+
+```sql
+CREATE INDEX IF NOT EXISTS volume_index ON goods USING brin (height, width, depth);
+
+CREATE INDEX IF NOT EXISTS invoice_num_index ON goods USING btree (invoice_num);
+
+CREATE INDEX IF NOT EXISTS sender_ipn_index ON invoices USING btree (sender_ipn);
+
+CREATE INDEX IF NOT EXISTS shipping_cost_index ON invoices USING brin (shipping_cost);
+
+CREATE INDEX IF NOT EXISTS date_inspection_index ON reweightings USING brin (date_inspection);
+``` 
+
+### SQL запити
+```sql
+SELECT * FROM goods WHERE invoice_num = 170;
+```
+
+![lab](img/ind_1.png)
+
+```sql
+SELECT id from reweightings WHERE date_inspection BETWEEN '2019-12-04 13:04:07' AND '2019-12-04 13:04:20'
+```
+
+```sql
+SELECT min(shipping_cost) FROM invoices;
+```
+
+```sql
+SELECT DISTINCT sender_ipn FROM (SELECT sender_ipn FROM goods INNER JOIN invoices on invoice_num = num) t;
+```
+
+![lab](img/3.png)
+
+![lab](img/4.png)
+
 
 ## Завдання №3: команди, що ініціюють виконання тригера, текст тригера та скріншоти зі змінами у таблицях бази даних
 
