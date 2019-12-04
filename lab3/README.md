@@ -370,17 +370,112 @@ COMMIT;
     </tr>
 </table>
 
-![lab](img/rc1.png)
+| Transaction #1      | Transaction #2      |
+|---------------------|---------------------|
+| ![lab](img/rc3.png) |                     |
+|                     | ![lab](img/rc4.png) |
+| ![lab](img/rc5.png) |                     |
+|                     | ![lab](img/rc6.png) |
+| ![lab](img/rc7.png) |                     |
 
-![lab](img/rc2.png)
+### REPEATABLE READ
 
-![lab](img/rc3.png)
+<table>
+    <tr>
+        <td>Transction #1</td>
+        <td>Transction #2</td>
+    </tr>
+    <tr>
+        <td>
+            <pre lang="sql">
+-- #1
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SELECT shipping_cost FROM invoices WHERE num = 1;
+-- #2
+<br>
+<br>
+<br>
+-- #3
+SELECT shipping_cost FROM invoices WHERE num = 1;
+-- #4
+COMMIT;
+SELECT shipping_cost FROM invoices WHERE num = 1;
+            </pre>
+        </td>
+        <td>
+            <pre lang="sql">
+-- #1
+<br>
+<br>
+-- #2
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+UPDATE invoices SET shipping_cost = 101.12 WHERE num = 1;
+COMMIT;
+-- #3
+<br>
+-- #4
+<br>
+<br>
+            </pre>
+        </td>
+    </tr>
+</table>
 
-![lab](img/rc4.png)
+| Transaction #1      | Transaction #2      |
+|---------------------|---------------------|
+| ![lab](img/rr1.png) |                     |
+|                     | ![lab](img/rr2.png) |
+| ![lab](img/rr3.png) |                     |
+| ![lab](img/rr4.png) |                     |
 
-![lab](img/rc5.png)
+### SERIALIZABLE
 
-![lab](img/rc6.png)
+<table>
+    <tr>
+        <td>Transction #1</td>
+        <td>Transction #2</td>
+    </tr>
+    <tr>
+        <td>
+            <pre lang="sql">
+-- #1
+BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+SELECT COUNT(*) FROM invoices;
+-- #2
+<br>
+<br>
+<br>
+<br>
+-- #3
+SELECT COUNT(*) FROM invoices;
+-- #4
+COMMIT;
+SELECT COUNT(*) FROM invoices;
+            </pre>
+        </td>
+        <td>
+            <pre lang="sql">
+-- #1
+<br>
+<br>
+-- #2
+BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+INSERT INTO invoices (date_departure, shipping_cost, sender_ipn, recipient_ipn, 
+	warehouse_dep_num, warehouse_arr_num) VALUES ('2019-02-01', 100, 1006926, 1216603, 3, 1);
+COMMIT;
+-- #3
+<br>
+-- #4
+<br>
+<br>
+            </pre>
+        </td>
+    </tr>
+</table>
 
-![lab](img/rc7.png)
-
+| Transaction #1      | Transaction #2      |
+|---------------------|---------------------|
+| ![lab](img/s1.png)  |                     |
+|                     | ![lab](img/s2.png)  |
+| ![lab](img/s3.png)  |                     |
+| ![lab](img/s5.png)  |                     |
